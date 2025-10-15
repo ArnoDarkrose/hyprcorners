@@ -8,6 +8,7 @@ use hyprland::Result;
 
 pub struct App;
 impl App {
+    //noinspection ALL
     pub async fn run(config: Config) -> Result<()> {
         let sticky = config.sticky_timeout.is_some();
 
@@ -69,6 +70,50 @@ impl App {
                     if x < corner.radius && y > config.screen_height - corner.radius {
                         if dispatch_permitted {
                             corner.dispatch(&sticky, &mut last_switch).await?;
+                        }
+
+                        inside_corner = true;
+                        modified_inside_corner = true;
+                    }
+                }
+
+                if let Some(ref edge) = config.top {
+                    if y < edge.distance {
+                        if dispatch_permitted {
+                            edge.dispatch(&sticky, &mut last_switch).await?;
+                        }
+
+                        inside_corner = true;
+                        modified_inside_corner = true;
+                    }
+                }
+
+                if let Some(ref edge) = config.bottom {
+                    if y > config.screen_height - edge.distance {
+                        if dispatch_permitted {
+                            edge.dispatch(&sticky, &mut last_switch).await?;
+                        }
+
+                        inside_corner = true;
+                        modified_inside_corner = true;
+                    }
+                }
+
+                if let Some(ref edge) = config.left {
+                    if x < edge.distance {
+                        if dispatch_permitted {
+                            edge.dispatch(&sticky, &mut last_switch).await?;
+                        }
+
+                        inside_corner = true;
+                        modified_inside_corner = true;
+                    }
+                }
+
+                if let Some(ref edge) = config.right {
+                    if x > config.screen_width - edge.distance {
+                        if dispatch_permitted {
+                            edge.dispatch(&sticky, &mut last_switch).await?;
                         }
 
                         inside_corner = true;

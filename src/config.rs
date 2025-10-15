@@ -11,6 +11,10 @@ pub struct Config {
     pub top_left: Option<Corner>,
     pub bottom_right: Option<Corner>,
     pub bottom_left: Option<Corner>,
+    pub top: Option<Edge>,
+    pub bottom: Option<Edge>,
+    pub left: Option<Edge>,
+    pub right: Option<Edge>,
     #[serde(default = "sticky_timeout_default")]
     pub sticky_timeout: Option<u64>,
     #[serde(default = "timeout_default")]
@@ -59,7 +63,17 @@ pub struct Corner {
     pub args: String,
 }
 
-impl std::default::Default for Config {
+#[derive(Deserialize, Debug, Serialize)]
+pub struct Edge {
+    #[serde(default = "radius_default")]
+    pub distance: i64,
+    #[serde(default = "dispatcher_default")]
+    pub dispatcher: String,
+    #[serde(default = "arg_default")]
+    pub args: String,
+}
+
+impl Default for Config {
     fn default() -> Self {
         Self {
             top_right: None,
@@ -73,6 +87,18 @@ impl std::default::Default for Config {
                 radius: 10,
                 dispatcher: "workspace".to_string(),
                 args: "e-1".to_string(),
+            }),
+            top: None,
+            bottom: None,
+            left: Some(Edge {
+                distance: 10,
+                dispatcher: "workspace".to_string(),
+                args: "e-1".to_string(),
+            }),
+            right: Some(Edge {
+                distance: 10,
+                dispatcher: "workspace".to_string(),
+                args: "e+1".to_string(),
             }),
             sticky_timeout: None,
             timeout: 50,
@@ -117,6 +143,17 @@ impl Config {
 }
 
 impl Corner {
+    pub async fn dispatch(&self, sticky: &bool, last_switch: &mut Option<Instant>) -> Result<()> {
+        Dispatch::call_async(DispatchType::Custom(&self.dispatcher, &self.args)).await?;
+
+        if *sticky {
+            *last_switch = Some(Instant::now());
+        }
+
+        Ok(())
+    }
+}
+impl Edge {
     pub async fn dispatch(&self, sticky: &bool, last_switch: &mut Option<Instant>) -> Result<()> {
         Dispatch::call_async(DispatchType::Custom(&self.dispatcher, &self.args)).await?;
 
